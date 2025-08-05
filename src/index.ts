@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import cookieParser from "cookie-parser";
-
+import userRouter from "./routes/user.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
+import { connectDB } from "./config/db";
 
 // Create express app
 const app: Express = express();
@@ -23,12 +24,26 @@ app.use(
   })
 );
 
+// Routes
+app.use("/api/v1/users", userRouter);
+
 // Send response
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
     message: "Hello there",
   });
 });
+
+// Not found response
+app.all("/{*any}", (req: Request, res: Response, _next: NextFunction) => {
+  res.status(404).json({
+    status: "fail",
+    message: `Can't find ${req.originalUrl} on this server!`,
+  });
+});
+
+// Connect to database
+connectDB();
 
 // Start server
 const server = app.listen(PORT, () => {
