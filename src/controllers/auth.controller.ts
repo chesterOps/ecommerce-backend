@@ -45,6 +45,44 @@ export const login = catchAsync(async (req, res, next) => {
   });
 });
 
+// Signup
+export const signup = catchAsync(async (req, res, next) => {
+    // Get fields
+    const { password, name, phone, email } = req.body;
+  
+    // Check if fields are empty
+    if (!password || !name || !email)
+      return next(new AppError("All fields are required", 400));
+  
+    // Create user
+    const newUser = await User.create({
+      password,
+      name,
+      email,
+      phone,
+    });
+  
+    // Create data object
+    const data = newUser.toObject();
+  
+    // Remove unnecessary fields
+    const { password: pass, active, token: tk, __v, ...rest } = data;
+  
+    // Create token
+    const token = signToken({ id: data._id.toString(), role: data.role });
+  
+    // Add cookie to response
+    res.cookie("token", token, cookieConfig);
+  
+    // Send response
+    res.status(201).json({
+      status: "success",
+      message: "User registration successful",
+      token,
+      data: rest,
+    });
+  });
+
 // Logout
 export const logout = (_req: Request, res: Response, _next: NextFunction) => {
   // Clear cookie
