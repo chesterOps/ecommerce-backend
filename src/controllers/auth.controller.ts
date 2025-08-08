@@ -7,6 +7,9 @@ import cookieConfig from "../config/cookie";
 import { signToken } from "../utils/token";
 import { NextFunction, Response, Request } from "express";
 
+import { OAuth2Client, TokenPayload } from "google-auth-library";
+import jwt from "jsonwebtoken";
+
 export const login = catchAsync(async (req, res, next) => {
   // Get fields
   const { identifier, password } = req.body;
@@ -44,6 +47,81 @@ export const login = catchAsync(async (req, res, next) => {
     data: rest,
   });
 });
+
+// Google Autentication
+
+// Define an interface for the incoming request body
+interface GoogleAuthRequestBody {
+  token: string;
+}
+
+// Extend Request type to include our custom body interface
+interface CustomRequest extends Request {
+  body: GoogleAuthRequestBody;
+}
+
+// Initialize OAuth2Client. Use non-null assertion (!) as we assume env variables are set.
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
+
+export const googleAuth = async (req: CustomRequest, res: Response): Promise<void> => {
+  const { token } = req.body; 
+
+  try {
+    // Verify the Google ID token received from the client
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, 
+    });
+
+    // Extract the payload (user information) from the verified ticket
+    const payload: TokenPayload | undefined = ticket.getPayload();
+
+    // Check if the payload is valid and contains necessary information
+    if (!payload || !payload.sub || !payload.email || !payload.name) {
+
+      // If payload is missing or incomplete, respond with an unauthorized status
+      res.status(401).json({ message: "Google authentication failed: Invalid token payload." });
+      return; 
+    }
+
+    // Destructure specific user details from the payload
+    const { sub, email, name, picture } = payload;
+
+    // Attempt to find an existing user in the database by email
+    // Assume User.findOne returns a Promise<IUser | null>
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // If no user is found, create a new user entry in the database
+      // Assume User.create returns a Promise<IUser>
+      user = await User.create({
+        googleId: sub, 
+        name,
+        email,
+        password: sub, 
+        avatar: picture,
+      });
+    }
+
+    // Generate a JSON Web Token (JWT) for the application's session
+    const accessToken: string = jwt.sign(
+      { userId: user._id, email: user.email }, 
+      process.env.JWT_SECRET!, 
+      { expiresIn: "1d" } 
+    );
+
+    // Send a successful response with the generated access token
+    res.status(200).json({ token: accessToken, message: "Google login successful" });
+
+  } catch (error: any) { 
+    
+    console.error("Google Auth Error:", error.message);
+    // Send an unauthorized response to the client
+    res.status(401).json({ message: "Google authentication failed" });
+  }
+};
+
+
 
 // Logout
 export const logout = (_req: Request, res: Response, _next: NextFunction) => {
