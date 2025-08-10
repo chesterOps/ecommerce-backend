@@ -9,6 +9,7 @@ import AppError from "./utils/appError";
 import userRouter from "./routes/user.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
+import { googleAuth } from "./controllers/auth.controller";
 
 // Create express app
 const app: Express = express();
@@ -25,6 +26,9 @@ app.use(
     limit: "10kb",
   })
 );
+
+// Parse googleAuth
+app.use('/auth', googleAuth);
 
 // Routes
 app.use("/api/v1/users", userRouter);

@@ -9,6 +9,8 @@ import {
 } from "../controllers/user.controller";
 import { setUserID } from "../middlewares/user.middleware";
 
+import { googleAuth } from "../controllers/auth.controller";
+
 // User router
 const userRouter = express.Router();
 
@@ -30,5 +32,7 @@ userRouter
     filter(["role", "active", "address", "firstName", "lastName"]),
     updateUser
   );
+
+userRouter.post("/google", googleAuth);
 
 export default userRouter;
