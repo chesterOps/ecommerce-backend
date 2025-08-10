@@ -3,7 +3,6 @@ import filter from "../middlewares/filter";
 import {
   forgotPassword,
   resetPassword,
-  signup,
 } from "../controllers/auth.controller";
 import { authorize, protect } from "../middlewares/auth.middleware";
 import {
@@ -13,10 +12,10 @@ import {
 } from "../controllers/user.controller";
 import { setUserID } from "../middlewares/user.middleware";
 
+import { googleAuth } from "../controllers/auth.controller";
+
 // User router
 const userRouter = express.Router();
-
-userRouter.post("/signup", signup);
 
 userRouter.post("/forgot-password", forgotPassword);
 
@@ -36,5 +35,7 @@ userRouter
     filter(["role", "active", "address", "firstName", "lastName"]),
     updateUser
   );
+
+  userRouter.post('/google', googleAuth);
 
 export default userRouter;
