@@ -3,7 +3,9 @@ import dotenv from "dotenv";
 // Configure env
 dotenv.config();
 
+import errorHandler from "./utils/errorHandler";
 import cookieParser from "cookie-parser";
+import AppError from "./utils/appError";
 import userRouter from "./routes/user.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
@@ -27,20 +29,13 @@ app.use(
 // Routes
 app.use("/api/v1/users", userRouter);
 
-// Send response
-app.get("/", (_req: Request, res: Response) => {
-  res.status(200).json({
-    message: "Hello there",
-  });
+// Not found response
+app.all("/{*any}", (req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// Not found response
-app.all("/{*any}", (req: Request, res: Response, _next: NextFunction) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl} on this server!`,
-  });
-});
+// Global error handler
+app.use(errorHandler);
 
 // Connect to database
 connectDB();
