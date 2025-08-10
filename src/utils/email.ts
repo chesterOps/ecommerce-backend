@@ -4,9 +4,9 @@ import nodemailerConfig from "../config/nodemailer";
 import { convert } from "html-to-text";
 
 export default class Email {
-  options: { url: string; from: string; to: string };
+  options: { url?: string; from: string; to: string };
 
-  constructor(options: { url: string; to: string }) {
+  constructor(options: { url?: string; to: string }) {
     this.options = {
       url: options.url,
       to: options.to,
@@ -20,12 +20,13 @@ export default class Email {
   }
 
   // Send email
-  private async send(template: string, subject: string) {
+  private async send(template: string, subject: string, options?: Object) {
     // Render HTML based on pug template
     const html = pug.renderFile(`${__dirname}/../email/${template}.pug`, {
       url: this.options.url,
       subject,
       year: new Date(Date.now()).getFullYear(),
+      ...options,
     });
 
     // Define email options
@@ -44,5 +45,15 @@ export default class Email {
   // Password reset
   async sendPasswordReset() {
     await this.send("passwordReset", "Reset password");
+  }
+
+  // Contact
+  async sendMessage(options: {
+    message: string;
+    name: string;
+    phone: string;
+    email: string;
+  }) {
+    await this.send("contact", options.name, options);
   }
 }

@@ -6,9 +6,7 @@ import Email from "../utils/email";
 import cookieConfig from "../config/cookie";
 import { signToken } from "../utils/token";
 import { NextFunction, Response, Request } from "express";
-
 import { OAuth2Client, TokenPayload } from "google-auth-library";
-import jwt from "jsonwebtoken";
 
 export const login = catchAsync(async (req, res, next) => {
   // Get fields
@@ -48,119 +46,121 @@ export const login = catchAsync(async (req, res, next) => {
   });
 });
 
-
 // Google Autentication
 
-// Define an interface for the incoming request body
-interface GoogleAuthRequestBody {
-  token: string;
-}
+export const googleAuth = catchAsync(async (req, res, next) => {
+  // Get token
+  const { token } = req.body;
 
-// Extend Request type to include our custom body interface
-interface CustomRequest extends Request {
-  body: GoogleAuthRequestBody;
-}
+  // New auth client
+  const client = new OAuth2Client({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+  });
 
-// Initialize OAuth2Client. Use non-null assertion (!) as we assume env variables are set.
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID!);
+  // Verify token and get ticket
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
 
-export const googleAuth = async (req: CustomRequest, res: Response): Promise<void> => {
-  const { token } = req.body; 
+  // Get payload from ticket
+  const payload: TokenPayload | undefined = ticket.getPayload();
 
-  try {
-    // Verify the Google ID token received from the client
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID, 
+  // Verify payload
+  if (!payload?.sub || !payload?.email || !payload?.name) {
+    return next(new AppError("Invaild google token payload", 401));
+  }
+
+  // Get google user data
+  const { sub: googleId, email, name } = payload;
+
+  let user;
+
+  // Check for user
+  const existingUser = await User.findOne({ email });
+
+  if (existingUser) {
+    // Add google id
+    existingUser.googleId = googleId;
+
+    // Save user
+    await existingUser.save({ validateBeforeSave: false });
+
+    // Append to user variable
+    user = existingUser.toObject();
+  } else {
+    // Create new user
+    const newUser = new User({
+      googleId,
+      name,
+      email,
+      password: null,
     });
 
-    // Extract the payload (user information) from the verified ticket
-    const payload: TokenPayload | undefined = ticket.getPayload();
+    // Save user
+    await newUser.save({ validateBeforeSave: false });
 
-    // Check if the payload is valid and contains necessary information
-    if (!payload || !payload.sub || !payload.email || !payload.name) {
-
-      // If payload is missing or incomplete, respond with an unauthorized status
-      res.status(401).json({ message: "Google authentication failed: Invalid token payload." });
-      return; 
-    }
-
-    // Destructure specific user details from the payload
-    const { sub, email, name, picture } = payload;
-
-    // Attempt to find an existing user in the database by email
-    // Assume User.findOne returns a Promise<IUser | null>
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // If no user is found, create a new user entry in the database
-      // Assume User.create returns a Promise<IUser>
-      user = await User.create({
-        googleId: sub, 
-        name,
-        email,
-        password: sub, 
-        avatar: picture,
-      });
-    }
-
-    // Generate a JSON Web Token (JWT) for the application's session
-    const accessToken: string = jwt.sign(
-      { userId: user._id, email: user.email }, 
-      process.env.JWT_SECRET!, 
-      { expiresIn: "1d" } 
-    );
-
-    // Send a successful response with the generated access token
-    res.status(200).json({ token: accessToken, message: "Google login successful" });
-
-  } catch (error: any) { 
-    
-    console.error("Google Auth Error:", error.message);
-    // Send an unauthorized response to the client
-    res.status(401).json({ message: "Google authentication failed" });
+    // Append to user variable
+    user = newUser.toObject();
   }
-};
 
+  // Remove unnecessary fields
+  const {
+    password: pass,
+    active,
+    token: tk,
+    __v,
+    googleId: googleID,
+    ...rest
+  } = user;
 
+  // Create token
+  const jwtToken = signToken({ id: user._id.toString(), role: user.role });
+
+  // Add cookie to response
+  res.cookie("token", jwtToken, cookieConfig);
+
+  // Redirect user
+  res.redirect(`${process.env.FRONT_URL}`);
+});
 
 // Signup
 export const signup = catchAsync(async (req, res, next) => {
-    // Get fields
-    const { password, name, phone, email } = req.body;
-  
-    // Check if fields are empty
-    if (!password || !name || !email)
-      return next(new AppError("All fields are required", 400));
-  
-    // Create user
-    const newUser = await User.create({
-      password,
-      name,
-      email,
-      phone,
-    });
-  
-    // Create data object
-    const data = newUser.toObject();
-  
-    // Remove unnecessary fields
-    const { password: pass, active, token: tk, __v, ...rest } = data;
-  
-    // Create token
-    const token = signToken({ id: data._id.toString(), role: data.role });
-  
-    // Add cookie to response
-    res.cookie("token", token, cookieConfig);
-  
-    // Send response
-    res.status(201).json({
-      status: "success",
-      message: "User registration successful",
-      token,
-      data: rest,
-    });
+  // Get fields
+  const { password, name, phone, email } = req.body;
+
+  // Check if fields are empty
+  if (!password || !name || !email)
+    return next(new AppError("All fields are required", 400));
+
+  // Create user
+  const newUser = await User.create({
+    password,
+    name,
+    email,
+    phone,
   });
+
+  // Create data object
+  const data = newUser.toObject();
+
+  // Remove unnecessary fields
+  const { password: pass, active, token: tk, __v, googleId, ...rest } = data;
+
+  // Create token
+  const token = signToken({ id: data._id.toString(), role: data.role });
+
+  // Add cookie to response
+  res.cookie("token", token, cookieConfig);
+
+  // Send response
+  res.status(201).json({
+    status: "success",
+    message: "User registration successful",
+    token,
+    data: rest,
+  });
+});
 
 // Logout
 export const logout = (_req: Request, res: Response, _next: NextFunction) => {
@@ -250,5 +250,91 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Password reset successful",
+  });
+});
+
+export const updateProfile = catchAsync(async (req, res, next) => {
+  // Get fields from request body
+  const {
+    currentPassword,
+    newPassword,
+    newPasswordConfirm,
+    name,
+    phone,
+    email,
+    address,
+  } = req.body;
+
+  // Fetch user
+  const user = await User.findById(res.locals.user._id).select("+password");
+
+  // Password was changed
+  let passwordChanged = false;
+
+  // Check if user was found
+  if (!user) return next(new AppError("User does not exist", 404));
+
+  // Check for email and phone
+  if (phone || email) {
+    // Construct options
+    const orArr = [];
+    if (phone) orArr.push({ phone });
+    if (email) orArr.push({ email });
+
+    // Check for existing user
+    const existingUser = await User.findOne({
+      $or: orArr,
+    });
+
+    // Return error if email or phone exists
+    if (existingUser)
+      return next(new AppError("Email or phone number already exists", 400));
+
+    // Update fields
+    user.phone = phone;
+    user.email = email;
+  }
+
+  // Check and update remaining fields
+  if (name) user.name = name;
+  if (address) user.address = address;
+
+  // Check for password change
+  if (currentPassword && newPassword && newPasswordConfirm) {
+    // Check if passwords match
+    if (newPassword !== newPasswordConfirm)
+      return next(new AppError("Passwords do not match", 400));
+
+    // Check if old password is correct
+    if (!(await user.verifyPassword(currentPassword, user.password)))
+      return next(new AppError("Incorrect old password", 400));
+
+    // Update password
+    user.password = newPassword;
+
+    // Set password changed
+    passwordChanged = true;
+  }
+
+  // Save user
+  await user.save();
+
+  // Remove unneccessary fields
+  const { password, active, token: tk, __v, ...rest } = user.toObject();
+
+  // Check if password was modified and assign new token
+  if (passwordChanged) {
+    // Create token
+    const token = signToken({ id: user._id.toString(), role: user.role });
+
+    // Add cookie to response
+    res.cookie("token", token, cookieConfig);
+  }
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    message: "Profile updated successfully",
+    data: rest,
   });
 });

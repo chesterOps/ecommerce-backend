@@ -6,16 +6,26 @@ dotenv.config();
 import errorHandler from "./utils/errorHandler";
 import cookieParser from "cookie-parser";
 import AppError from "./utils/appError";
+import cors from "cors";
 import userRouter from "./routes/user.routes";
+import authRouter from "./routes/auth.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
-import { googleAuth } from "./controllers/auth.controller";
+import { contact } from "./controllers/contact.controller";
 
 // Create express app
 const app: Express = express();
 
 // Define port
 const PORT: number = Number(process.env.PORT || 3000);
+
+// Allow all origins
+app.use(
+  cors({
+    origin: process.env.FRONT_URL,
+    credentials: true,
+  })
+);
 
 // Parse cookie
 app.use(cookieParser());
@@ -27,11 +37,14 @@ app.use(
   })
 );
 
-// Parse googleAuth
-app.use('/auth', googleAuth);
+// Auth routes
+app.use("/api/v1/auth", authRouter);
 
-// Routes
+// User routes
 app.use("/api/v1/users", userRouter);
+
+// Contact route
+app.post("/api/v1/contact", contact);
 
 // Not found response
 app.all("/{*any}", (req: Request, _res: Response, next: NextFunction) => {
