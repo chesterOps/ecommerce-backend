@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    googleId: {
+      type: String,
+      unique: true,
+    },
     phone: {
       type: String,
       unique: true,
