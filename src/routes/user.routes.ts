@@ -1,10 +1,6 @@
 import express from "express";
 import filter from "../middlewares/filter";
-import {
-  forgotPassword,
-  resetPassword,
-  signup,
-} from "../controllers/auth.controller";
+import { forgotPassword, resetPassword } from "../controllers/auth.controller";
 import { authorize, protect } from "../middlewares/auth.middleware";
 import {
   deleteUser,
@@ -15,8 +11,6 @@ import { setUserID } from "../middlewares/user.middleware";
 
 // User router
 const userRouter = express.Router();
-
-userRouter.post("/signup", signup);
 
 userRouter.post("/forgot-password", forgotPassword);
 
