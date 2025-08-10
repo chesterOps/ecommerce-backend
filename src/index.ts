@@ -3,16 +3,29 @@ import dotenv from "dotenv";
 // Configure env
 dotenv.config();
 
+import errorHandler from "./utils/errorHandler";
 import cookieParser from "cookie-parser";
+import AppError from "./utils/appError";
+import cors from "cors";
 import userRouter from "./routes/user.routes";
+import authRouter from "./routes/auth.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
+import { contact } from "./controllers/contact.controller";
 
 // Create express app
 const app: Express = express();
 
 // Define port
 const PORT: number = Number(process.env.PORT || 3000);
+
+// Allow all origins
+app.use(
+  cors({
+    origin: process.env.FRONT_URL,
+    credentials: true,
+  })
+);
 
 // Parse cookie
 app.use(cookieParser());
@@ -24,23 +37,22 @@ app.use(
   })
 );
 
-// Routes
+// Auth routes
+app.use("/api/v1/auth", authRouter);
+
+// User routes
 app.use("/api/v1/users", userRouter);
 
-// Send response
-app.get("/", (_req: Request, res: Response) => {
-  res.status(200).json({
-    message: "Hello there",
-  });
-});
+// Contact route
+app.post("/api/v1/contact", contact);
 
 // Not found response
-app.all("/{*any}", (req: Request, res: Response, _next: NextFunction) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl} on this server!`,
-  });
+app.all("/{*any}", (req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
+// Global error handler
+app.use(errorHandler);
 
 // Connect to database
 connectDB();
