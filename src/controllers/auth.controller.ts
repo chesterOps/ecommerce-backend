@@ -104,16 +104,6 @@ export const googleAuth = catchAsync(async (req, res, next) => {
     user = newUser.toObject();
   }
 
-  // Remove unnecessary fields
-  const {
-    password: pass,
-    active,
-    token: tk,
-    __v,
-    googleId: googleID,
-    ...rest
-  } = user;
-
   // Create token
   const jwtToken = signToken({ id: user._id.toString(), role: user.role });
 
