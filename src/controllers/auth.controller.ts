@@ -116,7 +116,7 @@ export const googleAuth = async (req: CustomRequest, res: Response): Promise<voi
   } catch (error: any) { 
     
     console.error("Google Auth Error:", error.message);
-    // Send an unauthorized response to the client
+    // Sends an unauthorized response to the client
     res.status(401).json({ message: "Google authentication failed" });
   }
 };
