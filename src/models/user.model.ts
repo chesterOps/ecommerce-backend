@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    googleId: {
+      type: String,
+      unique: true,
+    },
     phone: {
       type: String,
       unique: true,
@@ -102,7 +106,7 @@ const userSchema = new mongoose.Schema(
 // Encrypt password on save
 userSchema.pre("save", async function (next) {
   // Check if password field was modified
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
 
   // Hash password
   this.password = await bcrypt.hash(this.password, 12);
