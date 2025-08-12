@@ -120,8 +120,16 @@ export const signup = catchAsync(async (req, res, next) => {
   const { password, name, phone, email } = req.body;
 
   // Check if fields are empty
-  if (!password || !name || !email)
+  if (!password || !name || !email || !phone)
     return next(new AppError("All fields are required", 400));
+
+  // Check if email or phone number exists in the database
+  const existingUser = await User.findOne({
+    $or: [{ email }, { phone }],
+  });
+
+  if (existingUser)
+    return next(new AppError("Email or phone already exists", 400));
 
   // Create user
   const newUser = await User.create({

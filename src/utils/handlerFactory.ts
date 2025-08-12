@@ -1,6 +1,7 @@
 import catchAsync from "./catchAsync";
 import AppError from "./appError";
 import { Model } from "mongoose";
+import ApiFeatures from "./apiFeatures";
 
 // Delete document
 export const deleteOne = (Model: Model<any>) =>
@@ -95,5 +96,26 @@ export const updateOne = (Model: Model<any>, field: string = "_id") =>
       status: "success",
       message: `${modelName} updated successfully`,
       data: doc,
+    });
+  });
+
+// Find all documents
+export const findAll = (Model: Model<any>) =>
+  catchAsync(async (req, res, _next) => {
+    // Construct query
+    const features = new ApiFeatures(Model, req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    // Execute query
+    const docs = await features.query;
+
+    // Send response
+    res.status(200).json({
+      status: "success",
+      length: docs.length,
+      data: docs,
     });
   });
