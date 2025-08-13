@@ -15,4 +15,4 @@ export const updateCategory = updateOne(Category);
 
 export const getCategory = findOne(Category);
 
-export const getAllCatgeories = findAll(Category);
+export const getCatgeories = findAll(Category);

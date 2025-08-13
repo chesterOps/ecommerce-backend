@@ -1,7 +1,7 @@
 import catchAsync from "./catchAsync";
 import AppError from "./appError";
-import { Model } from "mongoose";
 import ApiFeatures from "./apiFeatures";
+import { Model } from "mongoose";
 
 // Delete document
 export const deleteOne = (Model: Model<any>) =>

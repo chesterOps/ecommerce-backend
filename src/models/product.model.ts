@@ -7,7 +7,6 @@ const productSchema = new mongoose.Schema(
     title: {
       type: String,
       required: [true, "Product must have a title"],
-      unique: true,
     },
     price: {
       type: Number,
@@ -44,7 +43,7 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
     },
     slug: String,
-    images: [{ type: String }],
+    images: [{ url: String, public_id: String }],
     stock: {
       type: Number,
       default: 0,

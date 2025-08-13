@@ -13,7 +13,7 @@ const userRouter = express.Router();
 
 userRouter.use(protect);
 
-userRouter.use(authorize(["admin"]));
+userRouter.use(authorize("admin"));
 
 userRouter.route("/").get(getAllUsers);
 
@@ -21,6 +21,6 @@ userRouter
   .route("/:id")
   .get(getUser)
   .delete(deleteUser)
-  .patch(filter(["role", "active", "address", "name"]), updateUser);
+  .patch(filter("role", "active", "address", "name"), updateUser);
 
 export default userRouter;

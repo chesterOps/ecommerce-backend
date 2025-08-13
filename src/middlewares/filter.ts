@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-export default function filter(body: Array<string>) {
+export default function filter(...body: Array<string>) {
   return (req: Request, _res: Response, next: NextFunction) => {
     // New body
     const newBody: { [key: string]: any } = {};
