@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { slugify } from "../utils/helpers";
+import Review from "./review.model";
+import { deleteImages, slugify } from "../utils/helpers";
 
 // Product schema
 const productSchema = new mongoose.Schema(
@@ -43,14 +44,25 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
     },
     slug: String,
-    images: [{ url: String, public_id: String }],
+    images: {
+      type: [
+        {
+          url: { type: String, required: true },
+          public_id: { type: String, required: true },
+        },
+      ],
+      default: undefined,
+    },
     stock: {
       type: Number,
       default: 0,
     },
     sizes: {
-      type: [{ type: String, enum: ["XS", "S", "M", "L", "XL"] }],
+      type: [String],
+      enum: ["XS", "S", "M", "L", "XL"],
+      default: undefined,
     },
+
     colors: {
       type: [
         {
@@ -58,6 +70,7 @@ const productSchema = new mongoose.Schema(
           hex: { type: String, required: true },
         },
       ],
+      default: undefined,
     },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
@@ -81,7 +94,10 @@ productSchema.pre("findOne", function (next) {
   this.populate({
     path: "reviews",
     select: "content rating user -product",
-  }).populate("category");
+  }).populate({
+    path: "category",
+    select: "name _id",
+  });
   next();
 });
 
@@ -93,17 +109,35 @@ productSchema.pre("save", function (next) {
 });
 
 // Add slug to product on update
-productSchema.pre("findOneAndUpdate", function (next) {
+productSchema.pre("findOneAndUpdate", async function (next) {
   // Get update object
   const update: any = this.getUpdate();
 
   // Check for title and update slug
   if (update && update.title) {
-    update.slug = slugify(update.name);
+    update.slug = slugify(update.title);
     this.setUpdate(update);
   }
 
   next();
+});
+
+// Delete images and reviews
+productSchema.post("findOneAndDelete", async function (doc) {
+  if (doc) {
+    // Delete reviews
+    await Review.deleteMany({ product: doc._id });
+
+    if (doc.images) {
+      // Get public ids
+      const public_ids = doc.images.map(
+        (image: { url: string; public_id: string }) => image.public_id
+      );
+
+      // Delete images from cloudinary
+      await deleteImages(public_ids);
+    }
+  }
 });
 
 const Product = mongoose.model("Product", productSchema);
