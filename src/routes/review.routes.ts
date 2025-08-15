@@ -24,7 +24,13 @@ reviewRouter
 reviewRouter
   .route("/:id")
   .get(getReview)
-  .patch(protect, authorize("customer"), checkUser, updateReview)
+  .patch(
+    protect,
+    authorize("customer"),
+    filter("rating", "content"),
+    checkUser,
+    updateReview
+  )
   .delete(protect, authorize("customer"), checkUser, deleteReview);
 
 export default reviewRouter;
