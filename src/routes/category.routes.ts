@@ -11,16 +11,15 @@ import {
 // Category router
 const categoryRouter = express.Router();
 
-categoryRouter.use(protect);
-
-categoryRouter.use(authorize("admin"));
-
-categoryRouter.route("/").get(getCatgeories).post(createCategory);
+categoryRouter
+  .route("/")
+  .get(getCatgeories)
+  .post(protect, authorize("admin"), createCategory);
 
 categoryRouter
   .route("/:id")
   .get(getCategory)
-  .patch(updateCategory)
-  .delete(deleteCategory);
+  .patch(protect, authorize("admin"), updateCategory)
+  .delete(protect, authorize("admin"), deleteCategory);
 
 export default categoryRouter;
