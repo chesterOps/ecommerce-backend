@@ -1,7 +1,7 @@
 import catchAsync from "./catchAsync";
 import AppError from "./appError";
 import ApiFeatures from "./apiFeatures";
-import { Model } from "mongoose";
+import { isValidObjectId, Model } from "mongoose";
 
 // Delete document
 export const deleteOne = (Model: Model<any>) =>
@@ -49,7 +49,7 @@ export const createOne = (Model: Model<any>) =>
   });
 
 // Find document
-export const findOne = (Model: Model<any>, field: string = "_id") =>
+export const findOne = (Model: Model<any>, field?: string) =>
   catchAsync(async (req, res, next) => {
     // Get model name
     const modelName = Model.modelName;
@@ -57,8 +57,14 @@ export const findOne = (Model: Model<any>, field: string = "_id") =>
     // Get id
     const id = req.params.id;
 
+    let doc;
+
     // Find document
-    const doc = await Model.findOne({ [field]: id });
+    if (isValidObjectId(id)) {
+      doc = await Model.findById(id);
+    } else {
+      if (field) doc = await Model.findOne({ [field]: id });
+    }
 
     // Return error if document doesnt exist
     if (!doc)
@@ -74,7 +80,7 @@ export const findOne = (Model: Model<any>, field: string = "_id") =>
   });
 
 // Update document
-export const updateOne = (Model: Model<any>, field: string = "_id") =>
+export const updateOne = (Model: Model<any>) =>
   catchAsync(async (req, res, next) => {
     // Get model name
     const modelName = Model.modelName;
@@ -83,7 +89,7 @@ export const updateOne = (Model: Model<any>, field: string = "_id") =>
     const id = req.params.id;
 
     // Fetch document
-    const doc = await Model.findOneAndUpdate({ [field]: id }, req.body, {
+    const doc = await Model.findByIdAndUpdate(id, req.body, {
       new: true,
     });
 
