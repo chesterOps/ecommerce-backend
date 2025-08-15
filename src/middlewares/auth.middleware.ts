@@ -62,7 +62,7 @@ export const protect = catchAsync(async (req, res, next) => {
 
 // Authorize user
 export const authorize =
-  (roles: Array<string>) =>
+  (...roles: Array<string>) =>
   (_req: Request, res: Response, next: NextFunction) => {
     // Check if user is authorized to perform action
     if (!roles.includes(res.locals.user.role))

@@ -9,6 +9,9 @@ import AppError from "./utils/appError";
 import cors from "cors";
 import userRouter from "./routes/user.routes";
 import authRouter from "./routes/auth.routes";
+import categoryRouter from "./routes/category.routes";
+import productRouter from "./routes/product.routes";
+import reviewRouter from "./routes/review.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
 import { contact } from "./controllers/contact.controller";
@@ -42,6 +45,15 @@ app.use("/api/v1/auth", authRouter);
 
 // User routes
 app.use("/api/v1/users", userRouter);
+
+// Category routes
+app.use("/api/v1/categories", categoryRouter);
+
+// Product routes
+app.use("/api/v1/products", productRouter);
+
+// Review routes
+app.use("/api/v1/reviews", reviewRouter);
 
 // Contact route
 app.post("/api/v1/contact", contact);
