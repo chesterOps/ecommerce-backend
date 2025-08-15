@@ -10,7 +10,7 @@ export const checkUser = catchAsync(async (req, res, next) => {
   if (!review) return next(new AppError("Review does not exist", 404));
 
   // Check if review belongs to user
-  if (review.user._id.toString() !== res.locals.user._id.toString())
+  if ((review.user as any).email !== res.locals.user.email)
     return next(
       new AppError("You do not have permission to perform this action.", 403)
     );
