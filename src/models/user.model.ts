@@ -118,8 +118,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Fetch only active users
-
 // Create user model
 const User = mongoose.model("User", userSchema);
 

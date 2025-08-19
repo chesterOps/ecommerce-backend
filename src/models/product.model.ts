@@ -62,7 +62,6 @@ const productSchema = new mongoose.Schema(
       enum: ["XS", "S", "M", "L", "XL"],
       default: undefined,
     },
-
     colors: {
       type: [
         {
@@ -103,7 +102,7 @@ productSchema.pre("findOne", function (next) {
 
 // Add slug to product on save
 productSchema.pre("save", function (next) {
-  if (!this.isModified("title")) next();
+  if (!this.isModified("title")) return next();
   this.slug = slugify(this.title);
   next();
 });
