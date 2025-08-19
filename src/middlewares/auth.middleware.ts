@@ -3,6 +3,7 @@ import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 import { fetchToken, verifyToken } from "../utils/token";
 import { Request, Response, NextFunction } from "express";
+// import * as admin from 'firebase-admin';
 
 // Check if user is logged in
 export const isLoggedIn = catchAsync(async (req, res, next) => {
@@ -73,3 +74,56 @@ export const authorize =
     // Next middleware
     next();
   };
+
+// // Extending the Request interface to include a user property
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: admin.auth.DecodedIdToken; // Add user property to Request
+//     }
+//   }
+// }
+  
+// /**
+//  * Middleware to authenticate Firebase ID tokens.
+//  * Attaches the decoded token to `req.user`.
+//  */
+// export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+//   const authHeader = req.headers.authorization;
+
+//   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//     return res.status(401).json({ message: 'Authorization token not provided or malformed.' });
+//   }
+
+//   const idToken = authHeader.split(' ')[1]; // Get the token part
+
+//   try {
+//     const decodedToken = await admin.auth().verifyIdToken(idToken);
+//     req.user = decodedToken; // Attach the decoded token to the request
+//     next(); // Proceed to the next middleware or route handler
+//   } catch (error) {
+//     console.error('Error verifying Firebase ID token:', error);
+//     if (error instanceof Error && error.message.includes('Firebase ID token has expired')) {
+//       return res.status(401).json({ message: 'Unauthorized: Token expired.' });
+//     }
+//     return res.status(401).json({ message: 'Unauthorized: Invalid token.' });
+//   }
+// };
+
+// /**
+//  * Middleware to check if the authenticated user has an admin role.
+//  * Requires `authenticateToken` to run before it.
+//  */
+// export const authorizeAdmin = (req: Request, res: Response, next: NextFunction) => {
+//   // Check if req.user exists (meaning authenticateToken ran successfully)
+//   if (!req.user) {
+//     return res.status(403).json({ message: 'Forbidden: Authentication required first.' });
+//   }
+
+//   // More robust way: check Firebase Custom Claims
+//   if (!req.user.admin) { // Assuming 'admin' is a custom claim set for admin users
+//     return res.status(403).json({ message: 'Forbidden: Admin access required.' });
+//   }
+
+//   next(); // User is authorized as admin, proceed
+// };

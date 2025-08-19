@@ -12,9 +12,11 @@ import authRouter from "./routes/auth.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import reviewRouter from "./routes/review.routes";
+// import orderRouter from "./routes/order.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
 import { contact } from "./controllers/contact.controller";
+
 
 // Create express app
 const app: Express = express();
@@ -57,6 +59,10 @@ app.use("/api/v1/reviews", reviewRouter);
 
 // Contact route
 app.post("/api/v1/contact", contact);
+
+// Order routes
+//app.use("/api/v1/order", orderRouter);
+
 
 // Not found response
 app.all("/{*any}", (req: Request, _res: Response, next: NextFunction) => {
