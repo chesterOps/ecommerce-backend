@@ -1,6 +1,7 @@
 import catchAsync from "./catchAsync";
 import AppError from "./appError";
-import { Model } from "mongoose";
+import ApiFeatures from "./apiFeatures";
+import { isValidObjectId, Model } from "mongoose";
 
 // Delete document
 export const deleteOne = (Model: Model<any>) =>
@@ -48,7 +49,7 @@ export const createOne = (Model: Model<any>) =>
   });
 
 // Find document
-export const findOne = (Model: Model<any>, field: string = "_id") =>
+export const findOne = (Model: Model<any>, field?: string) =>
   catchAsync(async (req, res, next) => {
     // Get model name
     const modelName = Model.modelName;
@@ -56,8 +57,14 @@ export const findOne = (Model: Model<any>, field: string = "_id") =>
     // Get id
     const id = req.params.id;
 
+    let doc;
+
     // Find document
-    const doc = await Model.findOne({ [field]: id });
+    if (isValidObjectId(id)) {
+      doc = await Model.findById(id);
+    } else {
+      if (field) doc = await Model.findOne({ [field]: id });
+    }
 
     // Return error if document doesnt exist
     if (!doc)
@@ -73,7 +80,7 @@ export const findOne = (Model: Model<any>, field: string = "_id") =>
   });
 
 // Update document
-export const updateOne = (Model: Model<any>, field: string = "_id") =>
+export const updateOne = (Model: Model<any>) =>
   catchAsync(async (req, res, next) => {
     // Get model name
     const modelName = Model.modelName;
@@ -82,7 +89,7 @@ export const updateOne = (Model: Model<any>, field: string = "_id") =>
     const id = req.params.id;
 
     // Fetch document
-    const doc = await Model.findOneAndUpdate({ [field]: id }, req.body, {
+    const doc = await Model.findByIdAndUpdate(id, req.body, {
       new: true,
     });
 
@@ -95,5 +102,26 @@ export const updateOne = (Model: Model<any>, field: string = "_id") =>
       status: "success",
       message: `${modelName} updated successfully`,
       data: doc,
+    });
+  });
+
+// Find all documents
+export const findAll = (Model: Model<any>) =>
+  catchAsync(async (req, res, _next) => {
+    // Construct query
+    const features = new ApiFeatures(Model, req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    // Execute query
+    const docs = await features.query;
+
+    // Send response
+    res.status(200).json({
+      status: "success",
+      length: docs.length,
+      data: docs,
     });
   });
