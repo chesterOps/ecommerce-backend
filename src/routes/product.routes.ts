@@ -4,6 +4,7 @@ import express from "express";
 import {
   createProduct,
   deleteProduct,
+  getDiscountedProducts,
   getProduct,
   getProducts,
   updateProduct,
@@ -27,6 +28,8 @@ const allowedFields = [
   "stock",
   "colors",
 ];
+
+productRouter.get("/flash-sales", getDiscountedProducts);
 
 productRouter
   .route("/")

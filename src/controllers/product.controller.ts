@@ -9,6 +9,25 @@ import {
 } from "../utils/handlerFactory";
 import { deleteImages } from "../utils/helpers";
 
+export const getDiscountedProducts = catchAsync(async (req, res, _next) => {
+  // Limit
+  const limit = Number(req.query.limit) || 6;
+
+  // Fetch discount products
+  const products = await Product.find({
+    discount: { $exists: true, $ne: null },
+  })
+    .sort({ discount: -1 })
+    .limit(limit);
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    data: products,
+    length: products.length,
+  });
+});
+
 export const createProduct = createOne(Product);
 
 export const getProduct = findOne(Product, "slug");
