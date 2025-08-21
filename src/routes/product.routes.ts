@@ -10,7 +10,7 @@ import {
   updateProduct,
 } from "../controllers/product.controller";
 import { authorize, protect } from "../middlewares/auth.middleware";
-import { setCategory, setImages } from "../middlewares/product.middleware";
+import { setImages } from "../middlewares/product.middleware";
 
 // Product router
 const productRouter = express.Router();
@@ -39,7 +39,6 @@ productRouter
     authorize("admin"),
     upload.array("images"),
     filter(...allowedFields),
-    setCategory,
     setImages,
     createProduct
   );

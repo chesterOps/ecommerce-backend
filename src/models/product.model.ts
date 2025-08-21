@@ -39,10 +39,12 @@ const productSchema = new mongoose.Schema(
       required: [true, "Product description is required"],
       trim: true,
     },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-    },
+    category: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+      },
+    ],
     slug: String,
     images: {
       type: [

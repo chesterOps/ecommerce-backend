@@ -1,5 +1,3 @@
-import Category from "../models/category.model";
-import catchAsync from "../utils/catchAsync";
 import { Response, Request, NextFunction } from "express";
 
 export const setImages = (req: Request, _res: Response, next: NextFunction) => {
@@ -19,19 +17,3 @@ export const setImages = (req: Request, _res: Response, next: NextFunction) => {
   // Next middleware
   next();
 };
-
-export const setCategory = catchAsync(async (req, _res, next) => {
-  if (!req.body.category) {
-    // Fetch uncategorized category
-    const uncategorized = await Category.findOne({ name: "Uncategorized" });
-
-    // Go to next middleware if not found
-    if (!uncategorized) return next();
-
-    // Set category to uncategorized
-    req.body.category = uncategorized._id;
-  }
-
-  // Next middleware
-  next();
-});
