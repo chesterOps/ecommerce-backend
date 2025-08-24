@@ -106,10 +106,11 @@ export const updateOne = (Model: Model<any>) =>
   });
 
 // Find all documents
-export const findAll = (Model: Model<any>) =>
+export const findAll = (Model: Model<any>, searchField?: string) =>
   catchAsync(async (req, res, _next) => {
     // Construct query
-    const features = new ApiFeatures(Model, req.query)
+    const features = new ApiFeatures(Model, req.query, searchField)
+      .search()
       .filter()
       .sort()
       .limitFields()

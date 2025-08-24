@@ -1,7 +1,9 @@
+import Category from "../models/category.model";
 import Order from "../models/order.model";
 import Product from "../models/product.model";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
+import { isValidObjectId } from "mongoose";
 import {
   createOne,
   deleteOne,
@@ -10,30 +12,11 @@ import {
 } from "../utils/handlerFactory";
 import { deleteImages } from "../utils/helpers";
 
-export const getDiscountedProducts = catchAsync(async (req, res, _next) => {
-  // Limit
-  const limit = Number(req.query.limit) || 6;
-
-  // Fetch discount products
-  const products = await Product.find({
-    discount: { $exists: true, $ne: null },
-  })
-    .sort({ discount: -1 })
-    .limit(limit);
-
-  // Send response
-  res.status(200).json({
-    status: "success",
-    data: products,
-    length: products.length,
-  });
-});
-
 export const createProduct = createOne(Product);
 
 export const getProduct = findOne(Product, "slug");
 
-export const getProducts = findAll(Product);
+export const getProducts = findAll(Product, "title");
 
 export const deleteProduct = deleteOne(Product);
 
@@ -70,6 +53,79 @@ export const updateProduct = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Product updated successfully",
     data: updatedProduct.toObject(),
+  });
+});
+
+export const getProductsByCategory = catchAsync(async (req, res, next) => {
+  // Get category slug
+  const { slug } = req.params;
+
+  // Find category by slug
+  const category = await Category.findOne({ slug });
+
+  // Check if category was found
+  if (!category) return next(new AppError("Category not found", 404));
+
+  // Fetch products with that category
+  const products = await Product.find({ category: { $in: [category._id] } });
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    length: products.length,
+    data: products,
+  });
+});
+
+export const getRelatedProducts = catchAsync(async (req, res, next) => {
+  // Get id or slug
+  const { id } = req.params;
+
+  // Declare product var
+  let product;
+
+  // Find product using id or slug
+  if (isValidObjectId(id)) {
+    product = await Product.findById(id);
+  } else {
+    product = await Product.findOne({ slug: id });
+  }
+
+  // Check if product was found
+  if (!product) return next(new AppError("Product does not exist", 404));
+
+  // Fetch related products
+  const related = await Product.find({
+    // Exclude current id
+    _id: { $ne: product._id },
+    // Match any shared category
+    category: { $in: product.category },
+  }).limit(4);
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    length: related.length,
+    data: related,
+  });
+});
+
+export const getDiscountedProducts = catchAsync(async (req, res, _next) => {
+  // Limit
+  const limit = Number(req.query.limit) || 6;
+
+  // Fetch discount products
+  const products = await Product.find({
+    discount: { $exists: true, $ne: null },
+  })
+    .sort({ discount: -1 })
+    .limit(limit);
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    length: products.length,
+    data: products,
   });
 });
 
