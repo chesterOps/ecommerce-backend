@@ -7,9 +7,30 @@ export default class ApiFeatures {
   // The query string object from the request (usually req.query)
   queryString: { [key: string]: any };
 
-  constructor(Model: Model<any>, queryString: { [key: string]: any }) {
+  // Search field
+  searchField?: string;
+
+  constructor(
+    Model: Model<any>,
+    queryString: { [key: string]: any },
+    searchField?: string
+  ) {
     this.query = Model.find({});
     this.queryString = queryString;
+    if (searchField) this.searchField = searchField;
+  }
+
+  search() {
+    // Check for search query
+    if (this.queryString.search && this.searchField) {
+      const search = this.queryString.search;
+
+      // Add Search to query
+      this.query = this.query.find({
+        [this.searchField]: { $regex: search, $options: "i" },
+      });
+    }
+    return this;
   }
 
   filter() {
@@ -17,7 +38,7 @@ export default class ApiFeatures {
     const queryObj = { ...this.queryString };
 
     // Fields that should not be used for filtering
-    const excludedFields = ["page", "sort", "limit", "fields"];
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
 
     // Remove excluded fields from the query object
     excludedFields.forEach((el) => delete queryObj[el]);

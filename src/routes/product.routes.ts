@@ -4,9 +4,12 @@ import express from "express";
 import {
   createProduct,
   deleteProduct,
+  getBestSelling,
   getDiscountedProducts,
   getProduct,
   getProducts,
+  getProductsByCategory,
+  getRelatedProducts,
   updateProduct,
 } from "../controllers/product.controller";
 import { authorize, protect } from "../middlewares/auth.middleware";
@@ -30,6 +33,12 @@ const allowedFields = [
 ];
 
 productRouter.get("/flash-sales", getDiscountedProducts);
+
+productRouter.get("/best-selling", getBestSelling);
+
+productRouter.get("/related/:id", getRelatedProducts);
+
+productRouter.get("/category/:slug", getProductsByCategory);
 
 productRouter
   .route("/")
