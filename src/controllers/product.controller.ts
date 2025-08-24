@@ -1,3 +1,4 @@
+import Order from "../models/order.model";
 import Product from "../models/product.model";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
@@ -69,5 +70,43 @@ export const updateProduct = catchAsync(async (req, res, next) => {
     status: "success",
     message: "Product updated successfully",
     data: updatedProduct.toObject(),
+  });
+});
+
+export const getBestSelling = catchAsync(async (_req, res, _next) => {
+  const bestSelling = await Order.aggregate([
+    { $unwind: "$items" }, // break each product out
+    {
+      $group: {
+        _id: "$items.product", // group by product id
+        totalSold: { $sum: "$items.quantity" }, // sum quantity
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "_id",
+        as: "product",
+      },
+    },
+    { $unwind: "$product" },
+    { $sort: { totalSold: -1 } }, // highest first
+    { $limit: 4 }, // top 10 best-selling
+    {
+      $project: {
+        _id: 0,
+        productId: "$product._id",
+        title: "$product.title",
+        price: "$product.price",
+        totalSold: 1,
+      },
+    },
+  ]);
+
+  // Send response
+  res.status(200).json({
+    status: "success",
+    data: bestSelling,
   });
 });
