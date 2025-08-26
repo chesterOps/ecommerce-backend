@@ -1,4 +1,4 @@
-const isProd = process.env.NODE_ENV === "production";
+//const isProd = process.env.NODE_ENV === "production";
 
 const cookieConfig: {
   httpOnly: boolean;
@@ -8,8 +8,8 @@ const cookieConfig: {
 } = {
   httpOnly: true,
   maxAge: 24 * 60 * 60 * 1000,
-  sameSite: isProd ? "none" : "lax",
-  secure: isProd,
+  sameSite: "none",
+  secure: false,
 };
 
 export default cookieConfig;
