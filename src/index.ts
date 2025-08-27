@@ -23,10 +23,23 @@ const app: Express = express();
 // Define port
 const PORT: number = Number(process.env.PORT || 3000);
 
+// Allowed origins
+const allowedOrigins = process.env.FRONT_URL?.split(" ");
+
 // Allow all origins
 app.use(
   cors({
-    origin: process.env.FRONT_URL,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+
+      // Allow allowed origins
+      if (allowedOrigins && allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
