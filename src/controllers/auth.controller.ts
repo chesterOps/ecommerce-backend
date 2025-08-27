@@ -110,8 +110,13 @@ export const googleAuth = catchAsync(async (req, res, next) => {
   // Add cookie to response
   res.cookie("token", jwtToken, cookieConfig);
 
-  // Redirect user
-  res.redirect(`${process.env.FRONT_URL}`);
+  // Send response
+  res.status(200).json({
+    status: "success",
+    message: "Login successful",
+    token,
+    data: user,
+  });
 });
 
 // Signup
