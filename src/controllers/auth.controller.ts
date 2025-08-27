@@ -162,12 +162,11 @@ export const signup = catchAsync(async (req, res, next) => {
 
 // Logout
 export const logout = (_req: Request, res: Response, _next: NextFunction) => {
-  // Overwrite cookie
-  res.cookie("token", "no-value", {
-    maxAge: 10000,
+  // Clear cookie
+  res.clearCookie("token", {
     httpOnly: true,
-    sameSite: "none",
     secure: true,
+    sameSite: "none",
   });
 
   // Send response
