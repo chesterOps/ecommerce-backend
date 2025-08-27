@@ -163,7 +163,7 @@ export const signup = catchAsync(async (req, res, next) => {
 // Logout
 export const logout = (_req: Request, res: Response, _next: NextFunction) => {
   // Clear cookie
-  res.clearCookie("token");
+  res.clearCookie("token", cookieConfig);
 
   // Send response
   res.status(200).json({
