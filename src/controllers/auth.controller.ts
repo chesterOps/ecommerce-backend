@@ -195,9 +195,13 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     // Update user
     await user.save({ validateBeforeSave: false });
 
+    const [devURL, prodURL] = process.env.FRONT_URL?.split(" ") ?? [];
+
     // Send email
     await new Email({
-      url: `${process.env.FRONT_URL}/reset-password/${resetToken}`,
+      url: `${
+        process.env.NODE_ENV === "production" ? prodURL : devURL
+      }/reset-password/${resetToken}`,
       to: user.email,
     }).sendPasswordReset();
   } catch (err: any) {
