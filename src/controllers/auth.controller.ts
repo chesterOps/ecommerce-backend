@@ -6,7 +6,6 @@ import Email from "../utils/email";
 import cookieConfig from "../config/cookie";
 import { signToken } from "../utils/token";
 import { NextFunction, Response, Request } from "express";
-import { OAuth2Client, TokenPayload } from "google-auth-library";
 
 export const login = catchAsync(async (req, res, next) => {
   // Get fields
@@ -52,27 +51,28 @@ export const googleAuth = catchAsync(async (req, res, next) => {
   // Get token
   const { token } = req.body;
 
-  // New auth client
-  const client = new OAuth2Client({
-    client_id: process.env.GOOGLE_CLIENT_ID,
-  });
+  // Check for access token
+  if (!token) return next(new AppError("Token is required", 400));
 
-  // Verify token and get ticket
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
+  let payload;
 
-  // Get payload from ticket
-  const payload: TokenPayload | undefined = ticket.getPayload();
+  try {
+    // Send request
+    const response = await fetch(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`
+    );
 
-  // Verify payload
-  if (!payload?.sub || !payload?.email || !payload?.name) {
-    return next(new AppError("Invaild google token payload", 401));
+    // Check response
+    if (!response.ok) throw new Error("Failed to fetch");
+
+    // Get payload
+    payload = await response.json();
+  } catch {
+    return next(new AppError("Invalid access token", 401));
   }
 
   // Get google user data
-  const { sub: googleId, email, name } = payload;
+  const { id: googleId, email, name } = payload;
 
   let user;
 
