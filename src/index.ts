@@ -78,7 +78,7 @@ app.use("/api/v1/coupons", couponRouter);
 app.post("/api/v1/contact", contact);
 
 // Order route
-app.use("/api/v1/order", orderRouter);
+app.use("/api/v1/orders", orderRouter);
 
 // Not found response
 app.all("/{*any}", (req: Request, _res: Response, next: NextFunction) => {
