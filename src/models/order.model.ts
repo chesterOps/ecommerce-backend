@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema(
         required: [true, "Address is required"],
       },
       addressLine2: { type: String },
-      companyName: { type: String, required: true },
+      companyName: { type: String },
       city: { type: String, required: true },
       phone: { type: String, required: true },
       email: { type: String, required: true },
