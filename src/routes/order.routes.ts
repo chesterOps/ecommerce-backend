@@ -10,6 +10,7 @@ import {
 } from "../controllers/order.controller";
 import { authorize, protect } from "../middlewares/auth.middleware";
 
+// Order router
 const router = Router();
 
 router.route("/").post(createOrder).get(protect, getAllOrders);

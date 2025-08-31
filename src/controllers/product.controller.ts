@@ -110,6 +110,41 @@ export const getRelatedProducts = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getRecommendedProducts = catchAsync(async (req, res, next) => {
+  const { wishlist } = req.body;
+
+  let products;
+
+  // Check for wishlist ids
+  if (!wishlist || !wishlist.length) {
+    products = await Product.aggregate([{ $sample: { size: 4 } }]);
+  } else {
+    // Find products in wishlist
+    const wishlistProducts = await Product.find({ _id: { $in: wishlist } });
+
+    // Extract categories
+    const categories = [
+      ...new Set(wishlistProducts.flatMap((product) => product.category)),
+    ];
+
+    // Recommend similar products
+    const recommendations = await Product.find({
+      category: { $in: categories },
+      _id: { $nin: wishlist },
+    }).limit(4);
+
+    // Check if recommendations length is equal to zero
+    if (recommendations.length) products = recommendations;
+    products = await Product.aggregate([{ $sample: { size: 4 } }]);
+  }
+  // Send response
+  res.status(200).json({
+    status: "success",
+    data: products,
+    length: products.length,
+  });
+});
+
 export const getDiscountedProducts = catchAsync(async (req, res, _next) => {
   // Limit
   const limit = Number(req.query.limit) || 6;

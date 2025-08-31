@@ -16,6 +16,7 @@ import orderRouter from "./routes/order.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
 import { contact } from "./controllers/contact.controller";
+import couponRouter from "./routes/coupon.routes";
 
 // Create express app
 const app: Express = express();
@@ -51,6 +52,7 @@ app.use(cookieParser());
 app.use(
   express.json({
     limit: "10kb",
+    verify: (req: any, _res, buf) => (req.rawBody = buf.toString("utf8")),
   })
 );
 
@@ -69,9 +71,13 @@ app.use("/api/v1/products", productRouter);
 // Review routes
 app.use("/api/v1/reviews", reviewRouter);
 
+// Coupon route
+app.use("/api/v1/coupon", couponRouter);
+
 // Contact route
 app.post("/api/v1/contact", contact);
 
+// Order route
 app.use("/api/v1/order", orderRouter);
 
 // Not found response
