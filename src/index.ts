@@ -72,7 +72,7 @@ app.use("/api/v1/products", productRouter);
 app.use("/api/v1/reviews", reviewRouter);
 
 // Coupon route
-app.use("/api/v1/coupon", couponRouter);
+app.use("/api/v1/coupons", couponRouter);
 
 // Contact route
 app.post("/api/v1/contact", contact);
