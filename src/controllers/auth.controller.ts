@@ -56,20 +56,16 @@ export const googleAuth = catchAsync(async (req, res, next) => {
 
   let payload;
 
-  try {
-    // Send request
-    const response = await fetch(
-      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`
-    );
+  // Send request
+  const response = await fetch(
+    `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`
+  );
 
-    // Check response
-    if (!response.ok) throw new Error("Failed to fetch");
+  // Check response
+  if (!response.ok) return next(new AppError("Invalid access token", 400));
 
-    // Get payload
-    payload = await response.json();
-  } catch {
-    return next(new AppError("Invalid access token", 401));
-  }
+  // Get payload
+  payload = await response.json();
 
   // Get google user data
   const { id: googleId, email, name } = payload;
