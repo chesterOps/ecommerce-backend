@@ -9,6 +9,7 @@ import {
   getProduct,
   getProducts,
   getProductsByCategory,
+  getRecommendedProducts,
   getRelatedProducts,
   updateProduct,
 } from "../controllers/product.controller";
@@ -33,6 +34,8 @@ const allowedFields = [
 ];
 
 productRouter.get("/flash-sales", getDiscountedProducts);
+
+productRouter.post("/recommended", getRecommendedProducts);
 
 productRouter.get("/best-selling", getBestSelling);
 

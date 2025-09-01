@@ -19,6 +19,18 @@ const userSchema = new mongoose.Schema(
     address: {
       type: String,
     },
+    billingAddress: {
+      name: { type: String, required: true },
+      addressLine1: {
+        type: String,
+        required: [true, "Address is required"],
+      },
+      addressLine2: { type: String },
+      companyName: { type: String },
+      city: { type: String, required: true },
+      phone: { type: String, required: true },
+      email: { type: String, required: true },
+    },
     role: {
       type: String,
       enum: ["customer", "admin"],
