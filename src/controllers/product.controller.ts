@@ -134,8 +134,10 @@ export const getRecommendedProducts = catchAsync(async (req, res, next) => {
     }).limit(4);
 
     // Check if recommendations length is equal to zero
-    if (recommendations.length) products = recommendations;
-    products = await Product.aggregate([{ $sample: { size: 4 } }]);
+    products =
+      recommendations.length > 0
+        ? recommendations
+        : await Product.aggregate([{ $sample: { size: 4 } }]);
   }
   // Send response
   res.status(200).json({
