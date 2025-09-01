@@ -39,7 +39,7 @@ export const pay = catchAsync(async (req, res, next) => {
       },
       amount: amount.toString(),
       payment_options: "card",
-      redirect_url: "https://www.google.com",
+      redirect_url: "https://exclusiveng.netlify.app",
       meta: {
         city,
         phone,
