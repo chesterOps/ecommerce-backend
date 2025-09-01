@@ -6,14 +6,15 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       default: "pending",
-      enum: ["completed", "pending", "processing", "cancelled"],
+      enum: ["completed", "pending", "paid", "cancelled"],
     },
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
+    ref: { type: String },
     billingAddress: {
-      Name: { type: String, required: true },
+      name: { type: String, required: true },
       addressLine1: {
         type: String,
         required: [true, "Address is required"],

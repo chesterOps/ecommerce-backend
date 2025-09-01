@@ -1,3 +1,4 @@
+import Order from "../models/order.model";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 
@@ -48,6 +49,7 @@ export const pay = catchAsync(async (req, res, next) => {
         items: JSON.stringify(items),
         addressLine2: req.body?.addressLine2,
         companyName: req.body?.companyName,
+        user: req.body?.user,
       },
     }),
   });
@@ -65,20 +67,52 @@ export const pay = catchAsync(async (req, res, next) => {
   });
 });
 
-export const verifyPayment = catchAsync(async (req, res, _next) => {
-  // Get request body
-  const event = req.body;
+export const verifyPayment = catchAsync(async (req, res, next) => {
+  const secretHash = process.env.FLUTTERWAVE_SECRET_HASH; // set in Flutterwave dashboard
+  const signature = req.headers["verif-hash"];
 
+  // Verify signature
+  if (!signature || signature !== secretHash)
+    return next(new AppError("Invalid signature", 400));
+
+  const event = req.body;
+  console.log("Webhook received:", event);
+
+  // Handle event (e.g., charge.completed)
   if (
     event.event === "charge.completed" &&
     event.data.status === "successful"
   ) {
-    const meta = event.data.meta;
+    // Get meta
+    const {
+      items,
+      city,
+      phone,
+      addressLine1,
+      firstName,
+      email,
+      addressLine2,
+      companyName,
+    } = event.data.meta;
 
-    // Parse items back
-    const items = JSON.parse(meta.items);
+    // Get items
+    const cart = JSON.parse(items);
 
-    console.log(meta);
+    // Create the order
+    await Order.create({
+      billingAddress: {
+        name: firstName,
+        companyName,
+        email,
+        city,
+        phone,
+        addressLine1,
+        addressLine2,
+      },
+      status: "paid",
+      items: cart,
+      ref: event.data.tx_ref,
+    });
   }
 
   // Send response
