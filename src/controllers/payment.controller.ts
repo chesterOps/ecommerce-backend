@@ -93,7 +93,7 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
       email,
       addressLine2,
       companyName,
-    } = event.data.meta;
+    } = event.meta_data;
 
     // Get items
     const cart = JSON.parse(items);
