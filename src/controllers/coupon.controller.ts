@@ -25,7 +25,7 @@ export const applyCoupon = catchAsync(async (req, res, next) => {
   // Find coupon
   const coupon = await Coupon.findOne({
     code: code.toUpperCase(),
-    isActive: true,
+    active: true,
   });
 
   // Check if coupon was found
