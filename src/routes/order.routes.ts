@@ -8,7 +8,7 @@ import {
   deleteOrder,
   cancelOrder,
 } from "../controllers/order.controller";
-import { authorize, protect } from "../middlewares/auth.middleware";
+import { authorize, isLoggedIn, protect } from "../middlewares/auth.middleware";
 import { pay, verifyPayment } from "../controllers/payment.controller";
 
 // Order router
@@ -16,7 +16,7 @@ const router = Router();
 
 router.route("/").post(createOrder).get(protect, getAllOrders);
 
-router.post("/checkout", pay);
+router.post("/checkout", isLoggedIn, pay);
 
 router.post("/verify-payment", verifyPayment);
 

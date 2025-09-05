@@ -1,4 +1,5 @@
 import mongoose, { Query } from "mongoose";
+import Product from "./product.model";
 
 // Order schema
 const orderSchema = new mongoose.Schema(
@@ -41,6 +42,16 @@ const orderSchema = new mongoose.Schema(
 orderSchema.pre(/^find/, function (this: Query<any, any>, next) {
   this.populate({ path: "user", select: "name email -_id" });
   next();
+});
+
+// Update product stock after order is created
+orderSchema.post("save", async function (doc) {
+  // Update stock for each product
+  for (const item of doc.items) {
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: { stock: -item.quantity },
+    });
+  }
 });
 
 // Order model

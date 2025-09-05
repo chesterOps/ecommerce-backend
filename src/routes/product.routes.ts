@@ -5,7 +5,6 @@ import {
   createProduct,
   deleteProduct,
   getBestSelling,
-  getDiscountedProducts,
   getProduct,
   getProducts,
   getProductsByCategory,
@@ -32,8 +31,6 @@ const allowedFields = [
   "stock",
   "colors",
 ];
-
-productRouter.get("/flash-sales", getDiscountedProducts);
 
 productRouter.post("/recommended", getRecommendedProducts);
 

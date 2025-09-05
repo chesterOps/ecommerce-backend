@@ -34,6 +34,16 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    flashsale: {
+      type: {
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Flashsale",
+        },
+        discount: { type: Number, min: 10, max: 90 },
+      },
+      required: false,
+    },
     description: {
       type: String,
       required: [true, "Product description is required"],
@@ -100,6 +110,23 @@ productSchema.pre("findOne", function (next) {
     select: "name _id",
   });
   next();
+});
+
+// Update discount with flash sale discount
+productSchema.post("findOne", function (doc) {
+  if (!doc || !doc.flashsale) return;
+  doc.discount = doc.flashsale.discount;
+  doc.flashsale = undefined;
+});
+
+// Update discount with flash sale discount for find
+productSchema.post("find", function (docs) {
+  docs.forEach((doc: any) => {
+    if (doc && doc.flashsale) {
+      doc.discount = doc.flashsale.discount;
+      doc.flashsale = undefined;
+    }
+  });
 });
 
 // Add slug to product on save
