@@ -147,24 +147,6 @@ export const getRecommendedProducts = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getDiscountedProducts = catchAsync(async (req, res, _next) => {
-  // Limit
-  const limit = Number(req.query.limit) || 6;
-
-  // Fetch discount products
-  const products = await Product.find({
-    discount: { $exists: true, $ne: null },
-  })
-    .sort({ discount: -1 })
-    .limit(limit);
-
-  // Send response
-  res.status(200).json({
-    status: "success",
-    length: products.length,
-    data: products,
-  });
-});
 
 export const getBestSelling = catchAsync(async (_req, res, _next) => {
   const bestSelling = await Order.aggregate([
