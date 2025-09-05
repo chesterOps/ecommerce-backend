@@ -185,21 +185,24 @@ export const getBestSelling = catchAsync(async (_req, res, _next) => {
     },
     { $unwind: "$product" },
     { $sort: { totalSold: -1 } }, // highest first
-    { $limit: 4 }, // top 10 best-selling
+    { $limit: 4 }, // top 4 best-selling
     {
       $project: {
+        product: "$$ROOT.product",
         _id: 0,
-        productId: "$product._id",
-        title: "$product.title",
-        price: "$product.price",
         totalSold: 1,
       },
     },
   ]);
 
+  const data = bestSelling.map((item) => ({
+    ...item.product,
+    totalSold: item.totalSold,
+  }));
+
   // Send response
   res.status(200).json({
     status: "success",
-    data: bestSelling,
+    data,
   });
 });

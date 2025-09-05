@@ -1,11 +1,20 @@
 import Order from "../models/order.model";
+import User from "../models/user.model";
 import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 
 export const pay = catchAsync(async (req, res, next) => {
   // Get fields
-  const { firstName, email, amount, phone, items, city, addressLine1 } =
-    req.body;
+  const {
+    firstName,
+    email,
+    amount,
+    phone,
+    items,
+    city,
+    addressLine1,
+    saveAddress,
+  } = req.body;
 
   // Check for fields
   if (
@@ -18,6 +27,22 @@ export const pay = catchAsync(async (req, res, next) => {
     !items?.length
   )
     return next(new AppError("Invalid data format", 400));
+
+  // Save address to user profile
+  if (saveAddress && res.locals.user) {
+    // Update user
+    await User.findByIdAndUpdate(res.locals.user._id, {
+      billingAddress: {
+        name: firstName,
+        email,
+        city,
+        phone,
+        addressLine1,
+        addressLine2: req.body.addressLine2,
+        companyName: req.body.companyName,
+      },
+    });
+  }
 
   // Send request
   const response = await fetch("https://api.flutterwave.com/v3/payments", {
@@ -47,17 +72,15 @@ export const pay = catchAsync(async (req, res, next) => {
         firstName,
         email,
         items: JSON.stringify(items),
-        addressLine2: req.body?.addressLine2,
-        companyName: req.body?.companyName,
-        user: req.body?.user,
+        addressLine2: req.body.addressLine2,
+        companyName: req.body.companyName,
+        user: res.locals.user?._id,
       },
     }),
   });
 
   // Get data
   const data = await response.json();
-
-  console.log(data);
 
   if (!response.ok) return next(new AppError("Internal server error", 500));
 
@@ -68,7 +91,7 @@ export const pay = catchAsync(async (req, res, next) => {
 });
 
 export const verifyPayment = catchAsync(async (req, res, next) => {
-  const secretHash = process.env.FLUTTERWAVE_SECRET_HASH; // set in Flutterwave dashboard
+  const secretHash = process.env.FLUTTERWAVE_SECRET_HASH;
   const signature = req.headers["verif-hash"];
 
   // Verify signature
@@ -76,13 +99,9 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
     return next(new AppError("Invalid signature", 400));
 
   const event = req.body;
-  console.log("Webhook received:", event);
 
-  // Handle event (e.g., charge.completed)
-  if (
-    event.event === "charge.completed" &&
-    event.data.status === "successful"
-  ) {
+  // Process the event
+  if (event.status === "successful") {
     // Get meta
     const {
       items,
@@ -93,6 +112,7 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
       email,
       addressLine2,
       companyName,
+      user,
     } = event.meta_data;
 
     // Get items
@@ -108,16 +128,17 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         phone,
         addressLine1,
         addressLine2,
+        user,
       },
       status: "paid",
       items: cart,
-      ref: event.data.tx_ref,
+      ref: event.txRef,
     });
   }
 
   // Send response
   res.status(200).json({
     status: "success",
-    payStatus: event.data.status,
+    payStatus: event.status,
   });
 });
