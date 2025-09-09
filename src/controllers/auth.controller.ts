@@ -324,7 +324,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
   }
 
   // Save user
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   // Remove unneccessary fields
   const { password, active, token: tk, __v, ...rest } = user.toObject();

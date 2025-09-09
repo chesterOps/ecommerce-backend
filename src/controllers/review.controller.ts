@@ -14,6 +14,28 @@ export const getReview = findOne(Review);
 
 export const getReviews = findAll(Review);
 
+export const getAllReviews = catchAsync(async (_req, res) => {
+  // Get role
+  const role = res.locals.user.role;
+
+  // Construct query
+  let query;
+
+  // Check role
+  if (role === "admin") {
+    query = Review.find();
+  } else {
+    query = Review.find({ user: res.locals.user._id });
+  }
+
+  const reviews = await query.sort({ createdAt: -1 });
+
+  // Send response
+  res
+    .status(200)
+    .json({ status: "success", count: reviews.length, data: reviews });
+});
+
 export const updateReview = updateOne(Review);
 
 export const createReview = catchAsync(async (req, res, next) => {
