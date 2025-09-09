@@ -147,7 +147,6 @@ export const getRecommendedProducts = catchAsync(async (req, res, next) => {
   });
 });
 
-
 export const getBestSelling = catchAsync(async (_req, res, _next) => {
   const bestSelling = await Order.aggregate([
     { $unwind: "$items" }, // break each product out
@@ -177,10 +176,16 @@ export const getBestSelling = catchAsync(async (_req, res, _next) => {
     },
   ]);
 
-  const data = bestSelling.map((item) => ({
-    ...item.product,
-    totalSold: item.totalSold,
-  }));
+  const data = bestSelling.map((item) => {
+    const product = item.product;
+    product.discount = product.flashsale.discount;
+    product.flashsale = undefined;
+
+    return {
+      ...item.product,
+      totalSold: item.totalSold,
+    };
+  });
 
   // Send response
   res.status(200).json({
