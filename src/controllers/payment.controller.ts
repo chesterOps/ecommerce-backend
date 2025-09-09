@@ -125,10 +125,10 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
   if (!signature || signature !== secretHash)
     return next(new AppError("Invalid signature", 400));
 
-  const event = req.body;
+  const { event, data, meta_data } = req.body;
 
   // Process the event
-  if (event.status === "successful") {
+  if (event === "charge.completed" && data.status === "successful") {
     // Get meta
     const {
       items,
@@ -140,7 +140,7 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
       addressLine2,
       companyName,
       user,
-    } = event.meta_data;
+    } = meta_data;
 
     // Get items
     const cart = JSON.parse(items);
@@ -159,7 +159,7 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
       },
       status: "paid",
       items: cart,
-      ref: event.txRef,
+      ref: data.txRef,
       paymentMethod: "card",
     });
   }
