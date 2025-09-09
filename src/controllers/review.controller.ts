@@ -12,9 +12,7 @@ export const deleteReview = deleteOne(Review);
 
 export const getReview = findOne(Review);
 
-export const getReviews = findAll(Review);
-
-export const getAllReviews = catchAsync(async (_req, res) => {
+export const getReviews = catchAsync(async (_req, res) => {
   // Get role
   const role = res.locals.user.role;
 
