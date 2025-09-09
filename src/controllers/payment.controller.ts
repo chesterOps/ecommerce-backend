@@ -14,6 +14,7 @@ export const pay = catchAsync(async (req, res, next) => {
     city,
     addressLine1,
     saveAddress,
+    paymentMethod,
   } = req.body;
 
   // Check for fields
@@ -24,11 +25,13 @@ export const pay = catchAsync(async (req, res, next) => {
     !city ||
     !addressLine1 ||
     !phone ||
-    !items?.length
+    !items?.length ||
+    !["card", "cash-on-delivery"].includes(paymentMethod)
   )
     return next(new AppError("Invalid data format", 400));
 
   // Save address to user profile
+
   if (saveAddress && res.locals.user) {
     // Update user
     await User.findByIdAndUpdate(res.locals.user._id, {
@@ -44,49 +47,73 @@ export const pay = catchAsync(async (req, res, next) => {
     });
   }
 
-  // Send request
-  const response = await fetch("https://api.flutterwave.com/v3/payments", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET!}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      tx_ref: `tx-${Date.now()}`,
-      currency: "USD",
-      customer: {
-        email,
+  let data;
+
+  if (paymentMethod === "card") {
+    // Send request
+    const response = await fetch("https://api.flutterwave.com/v3/payments", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET!}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tx_ref: `tx-${Date.now()}`,
+        currency: "NGN",
+        customer: {
+          email,
+          name: firstName,
+        },
+        customizations: {
+          title: "Exclusive Shop",
+          description: "Payment for items",
+        },
+        amount: amount.toString(),
+        payment_options: "card",
+        redirect_url: "https://exclusiveng.netlify.app/order-confirm",
+        meta: {
+          city,
+          phone,
+          addressLine1,
+          firstName,
+          email,
+          items: JSON.stringify(items),
+          addressLine2: req.body.addressLine2,
+          companyName: req.body.companyName,
+          user: res.locals.user?._id,
+        },
+      }),
+    });
+
+    // Get data
+    data = await response.json();
+
+    if (!response.ok) return next(new AppError("Internal server error", 500));
+  } else {
+    // Create order
+    const order = await Order.create({
+      billingAddress: {
         name: firstName,
-      },
-      customizations: {
-        title: "Exclusive Shop",
-        description: "Payment for items",
-      },
-      amount: amount.toString(),
-      payment_options: "card",
-      redirect_url: "https://exclusiveng.netlify.app",
-      meta: {
+        email,
         city,
         phone,
         addressLine1,
-        firstName,
-        email,
-        items: JSON.stringify(items),
         addressLine2: req.body.addressLine2,
         companyName: req.body.companyName,
-        user: res.locals.user?._id,
       },
-    }),
-  });
+      status: "pending",
+      user: res.locals.user?.id,
+      paymentMethod: "cash-on-delivery",
+      items: items,
+    });
 
-  // Get data
-  const data = await response.json();
-
-  if (!response.ok) return next(new AppError("Internal server error", 500));
+    data = order;
+  }
 
   res.status(200).json({
     status: "success",
     data,
+    method: paymentMethod,
   });
 });
 
@@ -133,6 +160,7 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
       status: "paid",
       items: cart,
       ref: event.txRef,
+      paymentMethod: "card",
     });
   }
 

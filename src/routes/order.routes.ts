@@ -20,14 +20,14 @@ router.post("/checkout", isLoggedIn, pay);
 
 router.post("/verify-payment", verifyPayment);
 
+router
+  .route("/:id")
+  .patch(protect, authorize("admin"), filter("status"), updateOrder)
+  .get(getOrderById)
+  .delete(protect, authorize("admin"), deleteOrder);
+
 router.use(protect);
 
 router.patch("/cancel-order/:id", authorize("customer"), cancelOrder);
-
-router
-  .route("/:id")
-  .patch(authorize("admin"), filter("status"), updateOrder)
-  .get(getOrderById)
-  .delete(authorize("admin"), deleteOrder);
 
 export default router;

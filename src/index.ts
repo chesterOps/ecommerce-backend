@@ -14,10 +14,10 @@ import productRouter from "./routes/product.routes";
 import reviewRouter from "./routes/review.routes";
 import couponRouter from "./routes/coupon.routes";
 import orderRouter from "./routes/order.routes";
+import flashsaleRouter from "./routes/flashsale.routes";
 import express, { Express, Response, Request, NextFunction } from "express";
 import { connectDB } from "./config/db";
 import { contact } from "./controllers/contact.controller";
-import flashsaleRouter from "./routes/flashsale.routes";
 
 // Create express app
 const app: Express = express();
