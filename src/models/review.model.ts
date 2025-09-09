@@ -69,7 +69,7 @@ reviewSchema.pre(/^find/, function (this: Query<any, any>, next) {
   this.populate({
     path: "user",
     select: "name email -_id",
-  });
+  }).populate("product");
   next();
 });
 
