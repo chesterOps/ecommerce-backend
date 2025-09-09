@@ -155,11 +155,11 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         phone,
         addressLine1,
         addressLine2,
-        user,
       },
       status: "paid",
+      user,
       items: cart,
-      ref: data.txRef,
+      ref: data.tx_ref,
       paymentMethod: "card",
     });
   }

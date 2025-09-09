@@ -102,7 +102,7 @@ export const cancelOrder = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getOrderById = findOne(Order);
+export const getOrderById = findOne(Order, "ref");
 
 export const updateOrder = async (req: Request, res: Response) => {
   try {
