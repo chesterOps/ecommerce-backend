@@ -2,23 +2,24 @@ import Order from "../models/order.model";
 import catchAsync from "../utils/catchAsync";
 import AppError from "../utils/appError";
 import { Request, Response } from "express";
+import { findOne } from "../utils/handlerFactory";
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
     // Get fields
-    const { user, billingAddress, items } = req.body;
+    const { user, billingAddress, items, paymentMethod } = req.body;
 
-    // Check if items is empty
-    if (!items || items.length === 0) {
+    if (!billingAddress || !paymentMethod || !items.length) {
       return res
         .status(400)
-        .json({ status: "fail", message: "No items in the order." });
+        .json({ status: "fail", message: "Invalid data format." });
     }
 
     // Construct data
     const data: any = {
       billingAddress,
       items,
+      paymentMethod,
     };
 
     // Check for user
@@ -101,44 +102,7 @@ export const cancelOrder = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getOrderById = async (req: Request, res: Response) => {
-  // Get role
-  const role = res.locals.user.role;
-
-  // Construct query based on role
-  let query;
-
-  // Check role
-  if (role === "admin") {
-    query = Order.findById(req.params.id);
-  } else {
-    query = Order.findOne({ user: res.locals.user._id, id: req.params.id });
-  }
-
-  try {
-    // Find order
-    const order = await query;
-
-    // Send error if order is not found
-    if (!order) {
-      return res
-        .status(404)
-        .json({ status: "fail", message: "Order not found" });
-    }
-
-    // Send response
-    res.status(200).json({ success: true, order });
-  } catch (error) {
-    // Log error
-    console.error("Error fetching order by ID:", error);
-
-    // Send error response
-    res.status(500).json({
-      status: "error",
-      message: "Failed to fetch order",
-    });
-  }
-};
+export const getOrderById = findOne(Order);
 
 export const updateOrder = async (req: Request, res: Response) => {
   try {

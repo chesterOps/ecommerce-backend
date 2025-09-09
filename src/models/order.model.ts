@@ -26,6 +26,10 @@ const orderSchema = new mongoose.Schema(
       phone: { type: String, required: true },
       email: { type: String, required: true },
     },
+    paymentMethod: {
+      type: String,
+      enum: ["card", "cash-on-delivery"],
+    },
     items: [
       {
         title: { type: String, required: true },

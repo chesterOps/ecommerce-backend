@@ -3,12 +3,13 @@ import AppError from "../utils/appError";
 import catchAsync from "../utils/catchAsync";
 import { fetchToken, verifyToken } from "../utils/token";
 import { Request, Response, NextFunction } from "express";
-// import * as admin from 'firebase-admin';
 
 // Check if user is logged in
 export const isLoggedIn = catchAsync(async (req, res, next) => {
   // Fetch token
   const token = fetchToken(req);
+
+  console.log(token);
 
   // Check for token
   if (!token) return next();
