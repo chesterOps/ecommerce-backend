@@ -195,9 +195,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 
     // Send email
     await new Email({
-      url: `${
-        process.env.NODE_ENV === "production" ? prodURL : devURL
-      }/reset-password/${resetToken}`,
+      url: `${prodURL}/reset-password/${resetToken}`,
       to: user.email,
     }).sendPasswordReset();
   } catch (err: any) {
