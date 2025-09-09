@@ -25,6 +25,7 @@ const reviewSchema = new mongoose.Schema(
       required: [true, "Review must have an author"],
     },
   },
+
   {
     statics: {
       async calcAvgRating(prodID: mongoose.Types.ObjectId) {
@@ -58,6 +59,7 @@ const reviewSchema = new mongoose.Schema(
         await Product.findByIdAndUpdate(prodID, options);
       },
     },
+    timestamps: true,
   }
 );
 
