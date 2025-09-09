@@ -1,6 +1,6 @@
 import filter from "../middlewares/filter";
 import express from "express";
-import { authorize, protect } from "../middlewares/auth.middleware";
+import { authorize, protect, isLoggedIn } from "../middlewares/auth.middleware";
 import {
   createReview,
   deleteReview,
@@ -18,7 +18,7 @@ const reviewRouter = express.Router();
 
 reviewRouter
   .route("/")
-  .get(getReviews)
+  .get(isLoggedIn, getReviews)
   .post(protect, authorize("customer"), filter(...allowedFields), createReview);
 
 reviewRouter
